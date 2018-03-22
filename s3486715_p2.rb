@@ -7,7 +7,7 @@ class Email
 		:email, :gender, :ip_address, :send_date, :email_body, :email_title
 	def initialize(emailarray)
 		@id, @first_name, @last_name, @email, @gender, @ip_address, 
-		@send_date, @email_body,@email_title = emailarray
+		@send_date, @email_body,@email_title = emailarray.map {|x| x.to_s}
 	end
 	def toString
 		puts "id: #{@id}\nFirst Name: #{@first_name}\nLast Name: "+
@@ -28,12 +28,59 @@ class Email
 	end
 end
 
+def help(argm)
+	if(argm)
+		puts "Commands:"
+		printf "%-15s %-6s %-10s # Shows the list of commands available\n", 
+		File.basename(__FILE__), "help", ""
+		printf "%-15s %-6s %-10s # Load a XML file\n", 
+		File.basename(__FILE__), "-xml", "[filename]"
+		printf "%-15s %-6s %-10s # Allows you to search\n", 
+		File.basename(__FILE__), "list", ""
+		printf "%-15s %-6s %-10s # Searches for ip\n", 
+		"", "", "--ip"
+		printf "%-15s %-6s %-10s # Searches for name(first and/or last)\n", 
+		"", "", "--name"
+		printf "%-15s %-6s %-10s # Searches for email\n", 
+		"", "", "--email"
+		exit
+	end
+end
+
+def openFile(emaillist,emailXML)
+	begin
+		emails = Nokogiri::XML(File.open(emailXML))
+		emails.xpath("//record").each { |f| emaillist.push(Email.new(f.css(
+			'id//text()','first_name//text()','last_name//text()',
+			'email//text()','gender//text()','ip_address//text()',
+			'send_date//text()','email_body//text()','email_title//text()')))}
+	rescue StandardError  
+		puts "The file you have linked is not xml or is not found."
+		exit
+	end
+	emaillist
+end
+
+cmlInput = ARGV
 emaillist = []
-emails = Nokogiri::XML(File.open("emails.xml"))
+emailXML = "emails.xml"
+argm = nil
 
-emails.xpath("//record").each { |f| emaillist.push(Email.new(f.css(
-		'id//text()'.to_s,'first_name//text()','last_name//text()','email//text()',
-		'gender//text()','ip_address//text()','send_date//text()',
-		'email_body//text()','email_title//text()')))}
+argm = cmlInput.index("-xml")
+emailXML = cmlInput[argm+1] if argm != nil
 
-emaillist.each {|e| puts e.toJson(true) if e.id.to_s.eql? "1"}
+help(cmlInput.index("help"))
+
+emaillist = openFile(emaillist,emailXML)
+
+argm = cmlInput.index("list")
+
+emaillist.each {|e| puts e.toJson(true) if e.ip_address.eql? 
+	cmlInput[argm+2]} if cmlInput[argm+1].eql? "--ip" 
+	
+emaillist.each {|e| puts e.toJson(true) if 
+	e.first_name.eql? cmlInput[argm+2] or 
+	e.last_name.eql? cmlInput[argm+2]} if cmlInput[argm+1].eql? "--name" 
+	
+emaillist.each {|e| puts e.toJson(true) if
+	e.email.eql? cmlInput[argm+2]} if cmlInput[argm+1].eql? "--email" 
