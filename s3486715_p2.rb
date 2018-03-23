@@ -1,6 +1,5 @@
 require 'rubygems'
 require 'nokogiri'
-require 'json'
 
 class Email
 	attr_accessor :id, :first_name, :last_name, 
@@ -23,7 +22,11 @@ class Email
 		if !pretty
 			obj_to_json.to_json
 		else
-			JSON.pretty_generate(obj_to_json)
+			json = "{\n"
+			self.instance_variables.each do |i|
+				json += "  \"#{i[1..-1]}\": #{self.instance_variable_get(i)},\n"
+			end
+			json += "}"
 		end
 	end
 end
@@ -61,26 +64,30 @@ def openFile(emaillist,emailXML)
 	emaillist
 end
 
-cmlInput = ARGV
-emaillist = []
-emailXML = "emails.xml"
-argm = nil
+def main(cmlInput)
+	emaillist = []
+	emailXML = "emails.xml"
+	argm = nil
 
-argm = cmlInput.index("-xml")
-emailXML = cmlInput[argm+1] if argm != nil
+	argm = cmlInput.index("-xml")
+	emailXML = cmlInput[argm+1] if argm != nil
 
-help(cmlInput.index("help"))
+	help(cmlInput.index("help"))
 
-emaillist = openFile(emaillist,emailXML)
+	emaillist = openFile(emaillist,emailXML)
 
-argm = cmlInput.index("list")
+	argm = cmlInput.index("list")
+	if(argm)
+		emaillist.each {|e| puts e.toJson(true) if e.ip_address.eql? 
+			cmlInput[argm+2]} if cmlInput[argm+1].eql? "--ip" 
+		
+		emaillist.each {|e| puts e.toJson(true) if 
+			e.first_name.eql? cmlInput[argm+2] or 
+			e.last_name.eql? cmlInput[argm+2]} if cmlInput[argm+1].eql? "--name" 
+		
+		emaillist.each {|e| puts e.toJson(true) if
+			e.email.eql? cmlInput[argm+2]} if cmlInput[argm+1].eql? "--email" 
+	end
+end
 
-emaillist.each {|e| puts e.toJson(true) if e.ip_address.eql? 
-	cmlInput[argm+2]} if cmlInput[argm+1].eql? "--ip" 
-	
-emaillist.each {|e| puts e.toJson(true) if 
-	e.first_name.eql? cmlInput[argm+2] or 
-	e.last_name.eql? cmlInput[argm+2]} if cmlInput[argm+1].eql? "--name" 
-	
-emaillist.each {|e| puts e.toJson(true) if
-	e.email.eql? cmlInput[argm+2]} if cmlInput[argm+1].eql? "--email" 
+main(ARGV)
