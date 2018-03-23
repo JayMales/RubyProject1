@@ -1,6 +1,22 @@
 require 'rubygems'
 require 'nokogiri'
 
+=begin
+	Jay Males
+	s3486715
+	RAD Sem 1 2018
+	
+	For this project, I really wanted to make it "ruby".
+	So I used a lot of short cuts like .each{} and sort if statments.
+=end
+
+
+=begin
+	This is my data structor I have made to store the data which makes it
+	easier to search, print the data and stuff like that. It accepts an
+	array and converts everything into a String.
+=end
+
 class Email
 	attr_accessor :id, :first_name, :last_name, 
 		:email, :gender, :ip_address, :send_date, :email_body, :email_title
@@ -8,28 +24,33 @@ class Email
 		@id, @first_name, @last_name, @email, @gender, @ip_address, 
 		@send_date, @email_body,@email_title = emailarray.map {|x| x.to_s}
 	end
+	# Just a toString mainly for plain text printer
 	def toString
-		puts "id: #{@id}\nFirst Name: #{@first_name}\nLast Name: "+
-		+"#{@last_name}\nEmail: #{@email}\nGender: #{@gender}\n"+
-		"Ip Address: #{@ip_address}\nSend Data: #{@send_date}\n"+
-		"Email Body: #{@email_body}\nEmail Title: #{@email_title}\n"
-	end
-	def toJson (pretty)
-		obj_to_json ={'id' => @id, 'first_name'=>@first_name, 'last_name' => @last_name,
-		'email'=>@email,'gender'=>@gender,'ip_address'=>@ip_address,
-		'send_date'=>@send_date,'email_body'=>@email_body,
-		'email_title'=>@email_title}
-		if !pretty
-			obj_to_json.to_json
-		else
-			json = "{\n"
-			self.instance_variables.each do |i|
-				json += "  \"#{i[1..-1]}\": #{self.instance_variable_get(i)},\n"
-			end
-			json += "}"
+		self.instance_variables.each do |i|
+			puts "#{i[1..-1]}: #{self.instance_variable_get(i)}\n"
 		end
 	end
+=begin
+	Converts all instance variables in the class into json(String). Using 
+	a loop and checks for the last variable so it doesn't have a comma.
+=end
+	def toJson (pretty)
+		json = "{\n"
+		self.instance_variables.each_with_index  do |i,index|
+			json += "  \"#{i[1..-1]}\": \"#{self.instance_variable_get(i)}\""
+			if index != self.instance_variables.size - 1
+				json += ",\n"
+			else
+				json += "\n"
+			end
+		end
+		json += "}"
+	end
 end
+
+=begin
+	This is my help menu, just hard coded, nothing super special
+=end
 
 def help(argm)
 	if(argm)
@@ -50,6 +71,15 @@ def help(argm)
 	end
 end
 
+=begin
+	This function opens the file, converts it into nokogiri. Then uses
+	xpath to sort the xml into an array. That array becomes the instance
+	variables for an email data type above. Then the email data type gets 
+	pushed into an array. It also has a error check, to make sure there is
+	actually a file in the location sent from main. It also checks if the
+	data type fits with my object. It safely exits the program.
+=end
+
 def openFile(emaillist,emailXML)
 	begin
 		emails = Nokogiri::XML(File.open(emailXML))
@@ -64,15 +94,22 @@ def openFile(emaillist,emailXML)
 	emaillist
 end
 
+=begin
+	This is the main function. I wanted to put this into a function rather
+	then just leaving this code floating in the abyss. 
+	This function mainly deals with the args. It also holds the main array of
+	all the email objects. 
+=end
+
 def main(cmlInput)
 	emaillist = []
 	emailXML = "emails.xml"
 	argm = nil
 
+	help(cmlInput.index("help"))
+	
 	argm = cmlInput.index("-xml")
 	emailXML = cmlInput[argm+1] if argm != nil
-
-	help(cmlInput.index("help"))
 
 	emaillist = openFile(emaillist,emailXML)
 
@@ -91,3 +128,7 @@ def main(cmlInput)
 end
 
 main(ARGV)
+
+
+=begin
+=end
