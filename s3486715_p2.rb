@@ -35,16 +35,16 @@ class Email
 	a loop and checks for the last variable so it doesn't have a comma.
 =end
 	def toJson (pretty)
-		json = "{\n"
+		json = "  {\n"
 		self.instance_variables.each_with_index  do |i,index|
-			json += "  \"#{i[1..-1]}\": \"#{self.instance_variable_get(i)}\""
+			json += "    \"#{i[1..-1]}\": \"#{self.instance_variable_get(i)}\""
 			if index != self.instance_variables.size - 1
 				json += ",\n"
 			else
 				json += "\n"
 			end
 		end
-		json += "}"
+		json += "  }"
 	end
 end
 
@@ -94,6 +94,19 @@ def openFile(emaillist,emailXML)
 	emaillist
 end
 
+def jsonFinal(aryJson)
+	exit if aryJson.empty?
+	finalJson = "{"
+	aryJson.each do |i| 
+		if aryJson.first.eql? i
+			finalJson += "\n"+i
+		else
+			finalJson += ",\n"+i
+		end
+	end
+	finalJson += "\n}"
+end
+
 =begin
 	This is the main function. I wanted to put this into a function rather
 	then just leaving this code floating in the abyss. 
@@ -102,7 +115,7 @@ end
 =end
 
 def main(cmlInput)
-	emaillist = []
+	emaillist,finalPrint = [],[]
 	emailXML = "emails.xml"
 	argm = nil
 
@@ -115,20 +128,25 @@ def main(cmlInput)
 
 	argm = cmlInput.index("list")
 	if(argm)
-		emaillist.each {|e| puts e.toJson(true) if e.ip_address.eql? 
+		emaillist.each {|e| finalPrint.push(e.toJson(true)) if e.ip_address.eql? 
 			cmlInput[argm+2]} if cmlInput[argm+1].eql? "--ip" 
 		
-		emaillist.each {|e| puts e.toJson(true) if 
+		emaillist.each {|e| finalPrint.push(e.toJson(true)) if 
 			e.first_name.eql? cmlInput[argm+2] or 
 			e.last_name.eql? cmlInput[argm+2]} if cmlInput[argm+1].eql? "--name" 
 		
-		emaillist.each {|e| puts e.toJson(true) if
+		emaillist.each {|e| finalPrint.push(e.toJson(true)) if
 			e.email.eql? cmlInput[argm+2]} if cmlInput[argm+1].eql? "--email" 
 	end
+	puts jsonFinal(finalPrint)
 end
 
 main(ARGV)
 
-
 =begin
+	Todos:
+		Make a json printing function.
+		search dates
+		compare dates
+		upload to bitwhateveritiscalled
 =end
