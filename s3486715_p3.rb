@@ -103,9 +103,9 @@ def jsonFinal(aryJson)
 	finalJson = "{"
 	aryJson.each do |i| 
 		if aryJson.first.eql? i
-			finalJson += "\n"+i
+			finalJson += "\n"+i.toJson
 		else
-			finalJson += ",\n"+i
+			finalJson += ",\n"+i.toJson
 		end
 	end
 	finalJson += "\n}"
@@ -128,21 +128,54 @@ def main(cmlInput)
 	argm = cmlInput.index("-xml")
 	emailXML = cmlInput[argm+1] if argm != nil
 
-	emaillist = openFile(emaillist,emailXML)
-
+	emaillist,initSize = openFile(emaillist,emailXML), emaillist.size
+	
 	argm = cmlInput.index("list")
 	if(argm)
-		emaillist.each {|e| finalPrint.push(e.toJson) if e.ip_address.eql? 
+		
+		emaillist.each {|e| finalPrint.push(e) if e.ip_address.eql? 
 			cmlInput[argm+2]} if cmlInput[argm+1].eql? "--ip" 
 		
-		emaillist.each {|e| finalPrint.push(e.toJson) if 
-			e.first_name.eql? cmlInput[argm+2] or 
-			e.last_name.eql? cmlInput[argm+2]} if cmlInput[argm+1].eql? "--name" 
 		
-		emaillist.each {|e| finalPrint.push(e.toJson) if
+		emaillist.each {|e| finalPrint.push(e) if 
+			e.first_name.downcase.include? cmlInput[argm+2].downcase or 
+			e.last_name.downcase.include? cmlInput[argm+2].downcase
+			} if cmlInput[argm+1].eql? "--name" 
+		 
+		
+		emaillist.each {|e| finalPrint.push(e) if
 			e.email.eql? cmlInput[argm+2]} if cmlInput[argm+1].eql? "--email" 
+		
+		exit if finalPrint == []
 	end
+	
+	finalPrint = beforeAfter(emaillist,finalPrint,cmlInput) if 
+	cmlInput.index("before") != nil or cmlInput.index("after") != nil
+	
 	puts jsonFinal(finalPrint)
+end
+
+def beforeAfter(emaillist,finalPrint,cmlInput)
+	before,after = cmlInput.index("before"),cmlInput.index("after")
+
+	emaillist,finalPrint = finalPrint,[] if finalPrint != [] && before != nil
+	
+	emaillist.each {|e| finalPrint.push(e) if e.send_date <
+			cmlInput[before+1]} if before != nil
+			
+	if before && after
+		if cmlInput[before+1] < cmlInput[after+1]
+			puts "The \"before\" date has to be less then the \"after\" time."
+			exit
+		end
+	end
+	
+	emaillist,finalPrint = finalPrint,[] if finalPrint != [] && after != nil
+
+	emaillist.each {|e| finalPrint.push(e) if e.send_date >
+			cmlInput[after+1]} if after != nil
+			
+	finalPrint
 end
 
 main(ARGV)
@@ -150,7 +183,7 @@ main(ARGV)
 =begin
 	Todos:
 		Make a json printing function. ✓
-		search dates
+		search dates ✓
 		compare dates
 		upload to bitwhateveritiscalled
 =end
