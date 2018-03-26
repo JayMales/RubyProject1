@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'nokogiri'
+require 'date'
 
 =begin
 	Jay Males
@@ -132,19 +133,17 @@ def main(cmlInput)
 	
 	argm = cmlInput.index("list")
 	if(argm)
+		cmlValue = cmlInput[argm+2]
+		finalPrint = test(emaillist,finalPrint,cmlInput,argm,"--ip" 
+		) {|e| true if e.ip_address.eql? cmlValue}
 		
-		emaillist.each {|e| finalPrint.push(e) if e.ip_address.eql? 
-			cmlInput[argm+2]} if cmlInput[argm+1].eql? "--ip" 
+		finalPrint = test(emaillist,finalPrint,cmlInput,argm,"--name" 
+			) {|e| true if
+			e.first_name.downcase.include? cmlValue.downcase or
+			e.last_name.downcase.include? cmlValue.downcase }
 		
-		
-		emaillist.each {|e| finalPrint.push(e) if 
-			e.first_name.downcase.include? cmlInput[argm+2].downcase or 
-			e.last_name.downcase.include? cmlInput[argm+2].downcase
-			} if cmlInput[argm+1].eql? "--name" 
-		 
-		
-		emaillist.each {|e| finalPrint.push(e) if
-			e.email.eql? cmlInput[argm+2]} if cmlInput[argm+1].eql? "--email" 
+		finalPrint = test(emaillist,finalPrint,cmlInput,argm,"--email"
+		) {|e| true if e.email == cmlValue}
 		
 		exit if finalPrint == []
 	end
@@ -153,6 +152,12 @@ def main(cmlInput)
 	cmlInput.index("before") != nil or cmlInput.index("after") != nil
 	
 	puts jsonFinal(finalPrint)
+end
+
+def test(emaillist,finalPrint,cmlInput,argm,search)
+	emaillist.each {|e| finalPrint.push(e) if yield(e)} if
+	cmlInput[argm+1].eql? search
+	finalPrint
 end
 
 def beforeAfter(emaillist,finalPrint,cmlInput)
