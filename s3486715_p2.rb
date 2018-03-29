@@ -136,8 +136,9 @@ def main(cmlInput)
 			cmlInput[argm+2]} if cmlInput[argm+1].eql? "--ip" 
 		
 		emaillist.each {|e| finalPrint.push(e.toJson) if 
-			e.first_name.eql? cmlInput[argm+2] or 
-			e.last_name.eql? cmlInput[argm+2]} if cmlInput[argm+1].eql? "--name" 
+			e.first_name.downcase.include? cmlInput[argm+2].downcase or 
+			e.last_name.downcase.include? cmlInput[argm+2].downcase} if 
+			cmlInput[argm+1].eql? "--name" 
 		
 		emaillist.each {|e| finalPrint.push(e.toJson) if
 			e.email.eql? cmlInput[argm+2]} if cmlInput[argm+1].eql? "--email" 

@@ -9,6 +9,8 @@ require 'date'
 	
 	For this project, I really wanted to make it "ruby".
 	So I used a lot of short cuts like .each{} and sort if statments.
+	I assumed that when people type in a date, it is in the format 
+	yyyy-mm-dd 
 =end
 
 
@@ -68,6 +70,13 @@ def help(argm)
 		"", "", "--name"
 		printf "%-15s %-6s %-10s # Searches for email\n", 
 		"", "", "--email"
+		printf "%-15s %-6s %-10s # Allows you to search before a date\n", 
+		File.basename(__FILE__), "before", "[date]"
+		printf "%-15s %-6s %-10s # Allows you to search after a date\n", 
+		File.basename(__FILE__), "after", "[date]"
+		printf "%-15s %-6s %-10s # Allows you to search for emails sent "+
+		"on a day of the week\n",
+		File.basename(__FILE__), "--day", "[day]"
 		exit
 	end
 end
@@ -134,18 +143,32 @@ def main(cmlInput)
 	argm = cmlInput.index("list")
 	if(argm)
 		cmlValue = cmlInput[argm+2]
-		finalPrint = test(emaillist,finalPrint,cmlInput,argm,"--ip" 
+		finalPrint = sch(emaillist,finalPrint,cmlInput,argm,"--ip" 
 		) {|e| true if e.ip_address.eql? cmlValue}
 		
-		finalPrint = test(emaillist,finalPrint,cmlInput,argm,"--name" 
+		finalPrint = sch(emaillist,finalPrint,cmlInput,argm,"--name" 
 			) {|e| true if
 			e.first_name.downcase.include? cmlValue.downcase or
 			e.last_name.downcase.include? cmlValue.downcase }
 		
-		finalPrint = test(emaillist,finalPrint,cmlInput,argm,"--email"
+		finalPrint = sch(emaillist,finalPrint,cmlInput,argm,"--email"
 		) {|e| true if e.email == cmlValue}
 		
+		
 		exit if finalPrint == []
+	end
+	
+=begin
+	This converts the string to a date, then uses strftime to work out
+	what day it is then finds out if the input you typed in includes the 
+	day.
+=end
+	
+	argm = cmlInput.index("--day")
+	if(argm)
+		emaillist.each {|e| finalPrint.push(e) if Date.parse(e.send_date
+		).strftime("%A").downcase.include? cmlInput[argm+1].downcase} if
+		cmlInput[argm].eql? "--day"
 	end
 	
 	finalPrint = beforeAfter(emaillist,finalPrint,cmlInput) if 
@@ -154,11 +177,22 @@ def main(cmlInput)
 	puts jsonFinal(finalPrint)
 end
 
-def test(emaillist,finalPrint,cmlInput,argm,search)
+=begin
+	This is my attempt of removing repeat code....
+	But it ended up being longer then the actual code....
+=end
+
+def sch(emaillist,finalPrint,cmlInput,argm,search)
 	emaillist.each {|e| finalPrint.push(e) if yield(e)} if
 	cmlInput[argm+1].eql? search
 	finalPrint
 end
+
+=begin
+	Searches the finalPrint list for dates (before and/or after). if the 
+	list is empty, then it just searches all the emails. It also checks
+	if before is less then after and throws and error if that is the case
+=end
 
 def beforeAfter(emaillist,finalPrint,cmlInput)
 	before,after = cmlInput.index("before"),cmlInput.index("after")
@@ -189,6 +223,6 @@ main(ARGV)
 	Todos:
 		Make a json printing function. ✓
 		search dates ✓
-		compare dates
-		upload to bitwhateveritiscalled
+		compare dates ✓
+		upload to bitwhateveritiscalled ✓
 =end
