@@ -138,7 +138,7 @@ def main(cmlInput)
 	argm = cmlInput.index("-xml")
 	emailXML = cmlInput[argm+1] if argm != nil
 
-	emaillist,initSize = openFile(emaillist,emailXML), emaillist.size
+	emaillist = openFile(emaillist,emailXML)
 	
 	argm = cmlInput.index("list")
 	if(argm)
